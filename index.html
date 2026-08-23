@@ -491,7 +491,7 @@
 
         .metrics-strip {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1px;
             margin-top: 52px;
             border: 1px solid var(--border);
@@ -702,6 +702,10 @@
                         <p>Counter commands cover ad caps, notification limits, signup throttles, and application-owned quota logic.</p>
                     </article>
                     <article class="feature-card">
+                        <h3>Limit-filled streams</h3>
+                        <p>Subscribe with STREAM or PSTREAM to receive events when a key/window reaches its configured limit.</p>
+                    </article>
+                    <article class="feature-card">
                         <h3>Low-latency persistence</h3>
                         <p>Choose memory-only, dump-only, or WAL plus periodic dumps depending on the durability and latency tradeoff.</p>
                     </article>
@@ -748,6 +752,16 @@
                         <h3>Counters</h3>
                         <p>Increment, read, delete, watch, and bulk-delete key/window counters.</p>
                     </article>
+                    <article class="command-card">
+                        <span class="command-name">STREAM</span>
+                        <h3>Limit events</h3>
+                        <p>Stream frames when rate-limit commands move a key/window from below the limit to filled.</p>
+                    </article>
+                    <article class="command-card">
+                        <span class="command-name">PSTREAM</span>
+                        <h3>Prefix streams</h3>
+                        <p>Subscribe to the same limit-filled events, filtered to keys that start with a chosen prefix.</p>
+                    </article>
                 </div>
             </div>
         </section>
@@ -779,6 +793,25 @@ make run-cli</code></div>
                     </div>
                 </div>
 
+                <div class="two-column" style="margin-top: 38px;">
+                    <div class="column">
+                        <h3>Watch filled limits</h3>
+                        <div class="code-block"><code>[fq]&gt; STREAM
+ok|user_42;60;3;42
+
+[fq]&gt; PSTREAM tenant_7_
+ok|tenant_7_api;60;100;31</code></div>
+                    </div>
+                    <div class="column">
+                        <h3>Stream behavior</h3>
+                        <ul class="list">
+                            <li>Events fire when a limiter fills a key/window for the first time.</li>
+                            <li>Rejected rate-limit requests do not emit stream events.</li>
+                            <li>Slow subscribers use a bounded per-subscriber event queue.</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div class="metrics-strip" aria-label="fq capabilities">
                     <div class="metric">
                         <strong>3</strong>
@@ -787,6 +820,10 @@ make run-cli</code></div>
                     <div class="metric">
                         <strong>WAL</strong>
                         <span>recoverable write history</span>
+                    </div>
+                    <div class="metric">
+                        <strong>STREAM</strong>
+                        <span>limit-filled event feed</span>
                     </div>
                     <div class="metric">
                         <strong>/metrics</strong>
