@@ -623,6 +623,7 @@
                 <li><a href="#features">Features</a></li>
                 <li><a href="#commands">Commands</a></li>
                 <li><a href="#quickstart">Quick Start</a></li>
+                <li><a href="#operations">Operations</a></li>
                 <li><a href="https://github.com/fq-db/fq" target="_blank" rel="noreferrer">GitHub</a></li>
             </ul>
             <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
@@ -651,12 +652,13 @@
                     <div class="eyebrow"><span class="status-dot"></span>fast quotas over TCP</div>
                     <h1>Fast counters for limits that matter.</h1>
                     <p class="subtitle">
-                        fq is a small specialized database for frequency capping, API rate limiting, tenant quotas,
-                        token buckets, and high-throughput time-window counters.
+                        fq is a small specialized database for frequency capping, rate limiting, client-owned quota
+                        allocation, and high-throughput time-window counters.
                     </p>
                     <div class="badges">
                         <span class="badge">Go server</span>
                         <span class="badge">In-memory engine</span>
+                        <span class="badge">Quota allocator</span>
                         <span class="badge">WAL + dumps</span>
                         <span class="badge">Async replication</span>
                     </div>
@@ -680,7 +682,10 @@
                         <div class="response">1;1;2;60</div>
                         <div><span class="prompt">[fq]&gt;</span> <span class="command">RLIMIT TB user_42 10 1 60</span></div>
                         <div class="response">1;1;9;0</div>
-                        <div class="muted">allowed;current;remaining;reset_after</div>
+                        <div><span class="prompt">[fq]&gt;</span> <span class="command">QUOTA ACQ campaign_42 10 4 worker_a 60</span></div>
+                        <div class="response">1;4;4;6;60</div>
+                        <div class="muted">rate: allowed;current;remaining;reset_after</div>
+                        <div class="muted">quota: acquired;allocated;used;remaining;expires_after</div>
                     </div>
                 </div>
             </div>
@@ -702,6 +707,10 @@
                         <p>Counter commands cover ad caps, notification limits, signup throttles, and application-owned quota logic.</p>
                     </article>
                     <article class="feature-card">
+                        <h3>Client-owned quotas</h3>
+                        <p>Acquire, release, inspect, delete, and stream quota allocations with idempotent client reservations and optional TTL.</p>
+                    </article>
+                    <article class="feature-card">
                         <h3>Limit-filled streams</h3>
                         <p>Subscribe with STREAM or PSTREAM to receive events when a key/window reaches its configured limit.</p>
                     </article>
@@ -719,7 +728,7 @@
                     </article>
                     <article class="feature-card">
                         <h3>Developer tools</h3>
-                        <p>Build the server, CLI client, and live benchmark client from the same repository with simple make targets.</p>
+                        <p>Build the server, CLI client, benchmark client, stress harness, and release report tools from one repository.</p>
                     </article>
                 </div>
             </div>
@@ -748,6 +757,21 @@
                         <p>Allow bursts up to capacity and refill tokens over time for smoother throttling.</p>
                     </article>
                     <article class="command-card">
+                        <span class="command-name">QUOTA ACQ</span>
+                        <h3>Quota acquire</h3>
+                        <p>Atomically reserve units for a client, with idempotent retries and optional automatic expiry.</p>
+                    </article>
+                    <article class="command-card">
+                        <span class="command-name">QUOTA INF</span>
+                        <h3>Quota inspect</h3>
+                        <p>Read limit, used, remaining, and sorted active client allocations for a quota.</p>
+                    </article>
+                    <article class="command-card">
+                        <span class="command-name">QSTREAM</span>
+                        <h3>Quota events</h3>
+                        <p>Stream successful quota mutations, or use QPSTREAM to filter events by quota name prefix.</p>
+                    </article>
+                    <article class="command-card">
                         <span class="command-name">INCR / GET</span>
                         <h3>Counters</h3>
                         <p>Increment, read, delete, watch, and bulk-delete key/window counters.</p>
@@ -770,16 +794,28 @@
             <div class="container">
                 <h2 class="section-title">Quick Start</h2>
                 <p class="section-subtitle">
-                    Build the binaries, start a master server, and connect with the CLI.
+                    Run fq with Docker, download release binaries, or build the server and clients from source.
                 </p>
                 <div class="two-column">
                     <div class="column">
-                        <h3>Run locally</h3>
+                        <h3>Run with Docker</h3>
+                        <div class="code-block"><code>docker run --rm \
+  -p 1945:1945 \
+  -p 1946:1946 \
+  -p 2112:2112 \
+  ghcr.io/fq-db/fq:latest</code></div>
+                        <p>Mount <strong>config.yml</strong> and <strong>fq_data</strong> when you want local persistence configuration and data files.</p>
+                    </div>
+                    <div class="column">
+                        <h3>Build locally</h3>
                         <div class="code-block"><code>make build
 make run-server
 make run-cli</code></div>
-                        <p>The default server listens on port 1945. Observability is enabled at port 2112 when configured.</p>
+                        <p>Build outputs include <strong>fq</strong>, <strong>fq-cli</strong>, and <strong>fq-bench</strong>. Release archives provide prebuilt Linux and macOS binaries.</p>
                     </div>
+                </div>
+
+                <div class="two-column" style="margin-top: 38px;">
                     <div class="column">
                         <h3>Try a limiter</h3>
                         <div class="code-block"><code>[fq]&gt; RLIMIT FW user_42 3 60
@@ -790,6 +826,15 @@ make run-cli</code></div>
 1;3;0;42
 [fq]&gt; RLIMIT FW user_42 3 60
 0;3;0;41</code></div>
+                    </div>
+                    <div class="column">
+                        <h3>Acquire quota</h3>
+                        <div class="code-block"><code>[fq]&gt; QUOTA ACQ campaign_42 10 4 worker_a 60
+1;4;4;6;60
+[fq]&gt; QUOTA INF campaign_42
+10;4;6;worker_a;4;1788019260
+[fq]&gt; QUOTA REL campaign_42 worker_a
+1</code></div>
                     </div>
                 </div>
 
@@ -803,12 +848,30 @@ ok|user_42;60;3;42
 ok|tenant_7_api;60;100;31</code></div>
                     </div>
                     <div class="column">
+                        <h3>Watch quota changes</h3>
+                        <div class="code-block"><code>[fq]&gt; QSTREAM
+ok|acq;campaign_42;worker_a;4;4;6;1788019260
+
+[fq]&gt; QPSTREAM campaign_
+ok|rel;campaign_42;worker_a;4;0;10;0</code></div>
+                    </div>
+                </div>
+
+                <div class="two-column" style="margin-top: 38px;">
+                    <div class="column">
                         <h3>Stream behavior</h3>
                         <ul class="list">
                             <li>Events fire when a limiter fills a key/window for the first time.</li>
                             <li>Rejected rate-limit requests do not emit stream events.</li>
                             <li>Slow subscribers use a bounded per-subscriber event queue.</li>
+                            <li>Quota stream events are emitted only for state-changing mutations.</li>
                         </ul>
+                    </div>
+                    <div class="column">
+                        <h3>Benchmark workloads</h3>
+                        <div class="code-block"><code>make run-bench
+go run ./cmd/bench -profile benchmarks/profiles/release-fw.yml
+go run ./cmd/bench -address :1945 -connections 200 -rps 50000</code></div>
                     </div>
                 </div>
 
@@ -822,8 +885,8 @@ ok|tenant_7_api;60;100;31</code></div>
                         <span>recoverable write history</span>
                     </div>
                     <div class="metric">
-                        <strong>STREAM</strong>
-                        <span>limit-filled event feed</span>
+                        <strong>QUOTA</strong>
+                        <span>client-owned allocation API</span>
                     </div>
                     <div class="metric">
                         <strong>/metrics</strong>
@@ -837,7 +900,7 @@ ok|tenant_7_api;60;100;31</code></div>
             </div>
         </section>
 
-        <section class="section-band">
+        <section id="operations" class="section-band">
             <div class="container">
                 <h2 class="section-title">Operational Shape</h2>
                 <div class="two-column">
@@ -855,6 +918,25 @@ ok|tenant_7_api;60;100;31</code></div>
                             <li>Master accepts writes and serves WAL chunks to replicas.</li>
                             <li>Slave restores an initial dump, then continuously applies WAL updates.</li>
                             <li>Lag and replica ack progress are exposed as metrics.</li>
+                            <li>Writes are acknowledged by the master without waiting for replica acknowledgement.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="two-column" style="margin-top: 38px;">
+                    <div class="column">
+                        <h3>Recovery and tuning</h3>
+                        <ul class="list">
+                            <li><strong>wal.sync_commit</strong> controls whether responses wait for synced WAL batches.</li>
+                            <li><strong>engine.partitions</strong> reduces per-partition lock contention for hot workloads.</li>
+                            <li><strong>engine.wal_apply_workers</strong> parallelizes WAL recovery and replica apply work.</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h3>Verification tools</h3>
+                        <ul class="list">
+                            <li>Benchmark profiles cover smoke, fixed-window, sliding-window, token-bucket, and hot counter workloads.</li>
+                            <li>Stress scenarios exercise restart recovery, crash loops, dump recovery, and replication convergence.</li>
+                            <li>Release result capture records hardware, runtime, config, profile snapshots, and command manifests.</li>
                         </ul>
                     </div>
                 </div>
