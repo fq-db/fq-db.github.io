@@ -726,7 +726,7 @@
                     </article>
                     <article class="feature-card">
                         <h3>Operational visibility</h3>
-                        <p>Health checks and Prometheus metrics expose TCP connections, WAL behavior, flush latency, and replica progress.</p>
+                        <p>Health checks and Prometheus metrics expose TCP connections, WAL behavior, flush latency, and replica progress. The INSPECT command adds an on-demand JSON diagnostic snapshot with computed warnings.</p>
                     </article>
                     <article class="feature-card">
                         <h3>Developer tools</h3>
@@ -813,6 +813,11 @@
                         <h3>Physical reset</h3>
                         <p>Clear in-memory data and delete dump and WAL persistence files for a fresh local state.</p>
                     </article>
+                    <article class="command-card">
+                        <span class="command-name">INSPECT</span>
+                        <h3>Diagnostics</h3>
+                        <p>Return a JSON snapshot of instance, WAL, dump, replication, engine, and stream state with computed warnings. fq-cli renders it as colored tables with HINSPECT.</p>
+                    </article>
                 </div>
             </div>
         </section>
@@ -892,6 +897,34 @@ ok|rel;campaign_42;worker_a;4;0;10;0</code></div>
 
                 <div class="two-column" style="margin-top: 38px;">
                     <div class="column">
+                        <h3>Inspect diagnostics (raw)</h3>
+                        <div class="code-block"><code>[fq]&gt; INSPECT
+{"section":"summary","ts":1788110417,
+ "instance":{"role":"master","uptime_sec":8058,...},
+ "wal":{"queue_depth":0,"queue_capacity":16384,...},
+ "repl":{"role":"master","known_replicas":1,...},
+ "warnings":[]}</code></div>
+                        <p>Large reports are split into <strong>nxt|</strong> continuation frames and reassembled by the client; a single-frame report returns directly as <strong>ok|&lt;json&gt;</strong>.</p>
+                    </div>
+                    <div class="column">
+                        <h3>Inspect diagnostics (human)</h3>
+                        <div class="code-block"><code>[fq]&gt; HINSPECT
+INSTANCE
+--------
+role         master
+uptime       2h14m
+connections  6
+
+WAL
+---
+queue        0 / 16384 (0%)
+sync_commit  off</code></div>
+                        <p><strong>HINSPECT</strong> is an fq-cli-only alias: it sends the same INSPECT query and renders the JSON as colored tables entirely client-side.</p>
+                    </div>
+                </div>
+
+                <div class="two-column" style="margin-top: 38px;">
+                    <div class="column">
                         <h3>Stream behavior</h3>
                         <ul class="list">
                             <li>Events fire when a limiter fills a key/window for the first time.</li>
@@ -946,6 +979,7 @@ go run ./cmd/bench -address :1945 -connections 200 -rps 50000</code></div>
                             <li><strong>engine.key_index</strong> opts in to the B-tree index required by SCAN and PSCAN.</li>
                             <li><strong>FLUSHDB</strong> clears data, removes dump state, and records a WAL recovery barrier.</li>
                             <li><strong>TRUNCATE</strong> clears data and removes dump/WAL files.</li>
+                            <li><strong>INSPECT</strong> returns a JSON diagnostic snapshot (WAL, dump, replication, engine, streams) with computed warnings; fq-cli's <strong>HINSPECT</strong> renders it as tables.</li>
                         </ul>
                     </div>
                     <div class="column">
