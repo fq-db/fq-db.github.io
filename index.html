@@ -798,6 +798,16 @@
                         <h3>Prefix streams</h3>
                         <p>Subscribe to the same limit-filled events, filtered to keys that start with a chosen prefix.</p>
                     </article>
+                    <article class="command-card">
+                        <span class="command-name">FLUSHDB</span>
+                        <h3>Logical clear</h3>
+                        <p>Clear data, remove the current dump snapshot, and keep old WAL entries behind a recovery barrier.</p>
+                    </article>
+                    <article class="command-card">
+                        <span class="command-name">TRUNCATE</span>
+                        <h3>Physical reset</h3>
+                        <p>Clear in-memory data and delete dump and WAL persistence files for a fresh local state.</p>
+                    </article>
                 </div>
             </div>
         </section>
@@ -928,6 +938,8 @@ go run ./cmd/bench -address :1945 -connections 200 -rps 50000</code></div>
                             <li><strong>wal_and_dump</strong> for WAL-backed recovery and replication.</li>
                             <li><strong>dump_only</strong> for periodic snapshots without per-write WAL.</li>
                             <li><strong>memory</strong> for ephemeral high-throughput counter state.</li>
+                            <li><strong>FLUSHDB</strong> clears data, removes dump state, and records a WAL recovery barrier.</li>
+                            <li><strong>TRUNCATE</strong> clears data and removes dump/WAL files.</li>
                         </ul>
                     </div>
                     <div class="column">
