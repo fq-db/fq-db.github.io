@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="fq is a small specialized database for frequency capping, rate limiting, and quota counters.">
+    <meta name="description" content="fq is a small specialized database for frequency capping, rate limiting, and quota allocation.">
     <title>fq - Fast Quotas Database</title>
     <style>
         * {
@@ -652,8 +652,8 @@
                     <div class="eyebrow"><span class="status-dot"></span>fast quotas over TCP</div>
                     <h1>Fast counters for limits that matter.</h1>
                     <p class="subtitle">
-                        fq is a small specialized database for frequency capping, rate limiting, client-owned quota
-                        allocation, and high-throughput time-window counters.
+                        fq is a small specialized database for frequency capping, rate limiting, server-owned and
+                        client-owned quota allocation, and high-throughput time-window counters.
                     </p>
                     <div class="badges">
                         <span class="badge">Go server</span>
@@ -682,7 +682,9 @@
                         <div class="response">1;1;2;60</div>
                         <div><span class="prompt">[fq]&gt;</span> <span class="command">RLIMIT TB user_42 10 1 60</span></div>
                         <div class="response">1;1;9;0</div>
-                        <div><span class="prompt">[fq]&gt;</span> <span class="command">QUOTA ACQ campaign_42 10 4 worker_a 60</span></div>
+                        <div><span class="prompt">[fq]&gt;</span> <span class="command">QUOTA SET campaign_42 10</span></div>
+                        <div class="response">1</div>
+                        <div><span class="prompt">[fq]&gt;</span> <span class="command">QUOTA ACQ campaign_42 4 worker_a 60</span></div>
                         <div class="response">1;4;4;6;60</div>
                         <div class="muted">rate: allowed;current;remaining;reset_after</div>
                         <div class="muted">quota: acquired;allocated;used;remaining;expires_after</div>
@@ -707,8 +709,8 @@
                         <p>Counter commands cover ad caps, notification limits, signup throttles, and application-owned quota logic.</p>
                     </article>
                     <article class="feature-card">
-                        <h3>Client-owned quotas</h3>
-                        <p>Acquire, release, inspect, delete, and stream quota allocations with idempotent client reservations and optional TTL.</p>
+                        <h3>Quota allocation</h3>
+                        <p>Use server-owned quota policies or client-owned lease quotas with idempotent reservations and optional TTL.</p>
                     </article>
                     <article class="feature-card">
                         <h3>Limit-filled streams</h3>
@@ -757,9 +759,14 @@
                         <p>Allow bursts up to capacity and refill tokens over time for smoother throttling.</p>
                     </article>
                     <article class="command-card">
-                        <span class="command-name">QUOTA ACQ</span>
-                        <h3>Quota acquire</h3>
-                        <p>Atomically reserve units for a client, with idempotent retries and optional automatic expiry.</p>
+                        <span class="command-name">QUOTA SET / ACQ</span>
+                        <h3>Server-owned quotas</h3>
+                        <p>Set the quota limit on the server and let clients reserve units without passing policy values.</p>
+                    </article>
+                    <article class="command-card">
+                        <span class="command-name">QUOTA ACQL</span>
+                        <h3>Lease quotas</h3>
+                        <p>Atomically reserve units with a client-supplied limit for explicit client-owned lease workflows.</p>
                     </article>
                     <article class="command-card">
                         <span class="command-name">QUOTA INF</span>
@@ -829,7 +836,9 @@ make run-cli</code></div>
                     </div>
                     <div class="column">
                         <h3>Acquire quota</h3>
-                        <div class="code-block"><code>[fq]&gt; QUOTA ACQ campaign_42 10 4 worker_a 60
+                        <div class="code-block"><code>[fq]&gt; QUOTA SET campaign_42 10
+1
+[fq]&gt; QUOTA ACQ campaign_42 4 worker_a 60
 1;4;4;6;60
 [fq]&gt; QUOTA INF campaign_42
 10;4;6;worker_a;4;1788019260
@@ -886,7 +895,7 @@ go run ./cmd/bench -address :1945 -connections 200 -rps 50000</code></div>
                     </div>
                     <div class="metric">
                         <strong>QUOTA</strong>
-                        <span>client-owned allocation API</span>
+                        <span>server-owned and lease APIs</span>
                     </div>
                     <div class="metric">
                         <strong>/metrics</strong>
