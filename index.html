@@ -789,6 +789,11 @@
                         <p>Increment, read, delete, watch, and bulk-delete key/window counters.</p>
                     </article>
                     <article class="command-card">
+                        <span class="command-name">SCAN / PSCAN</span>
+                        <h3>Key scanning</h3>
+                        <p>When enabled with engine.key_index, walk key/window pairs in cursor chunks with optional prefix filtering.</p>
+                    </article>
+                    <article class="command-card">
                         <span class="command-name">STREAM</span>
                         <h3>Limit events</h3>
                         <p>Stream frames when rate-limit commands move a key/window from below the limit to filled.</p>
@@ -938,6 +943,7 @@ go run ./cmd/bench -address :1945 -connections 200 -rps 50000</code></div>
                             <li><strong>wal_and_dump</strong> for WAL-backed recovery and replication.</li>
                             <li><strong>dump_only</strong> for periodic snapshots without per-write WAL.</li>
                             <li><strong>memory</strong> for ephemeral high-throughput counter state.</li>
+                            <li><strong>engine.key_index</strong> opts in to the B-tree index required by SCAN and PSCAN.</li>
                             <li><strong>FLUSHDB</strong> clears data, removes dump state, and records a WAL recovery barrier.</li>
                             <li><strong>TRUNCATE</strong> clears data and removes dump/WAL files.</li>
                         </ul>
