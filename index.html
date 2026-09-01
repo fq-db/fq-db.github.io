@@ -624,6 +624,7 @@
                 <li><a href="#commands">Commands</a></li>
                 <li><a href="#quickstart">Quick Start</a></li>
                 <li><a href="#operations">Operations</a></li>
+                <li><a href="https://fq-db.github.io/fq/">Docs</a></li>
                 <li><a href="https://github.com/fq-db/fq" target="_blank" rel="noreferrer">GitHub</a></li>
             </ul>
             <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
@@ -664,6 +665,7 @@
                     </div>
                     <div class="cta-buttons">
                         <a class="btn btn-primary" href="https://github.com/fq-db/fq" target="_blank" rel="noreferrer">View on GitHub</a>
+                        <a class="btn btn-secondary" href="https://fq-db.github.io/fq/">Read Docs</a>
                         <a class="btn btn-secondary" href="#quickstart">Quick Start</a>
                     </div>
                 </div>
@@ -835,6 +837,10 @@
   -p 1945:1945 \
   -p 1946:1946 \
   -p 2112:2112 \
+  -e FQ_ADMIN_TOKEN=dev-admin-3f9a21c7b45e \
+  -e FQ_RW_TOKEN=dev-rw-8c1d64e0a7b2 \
+  -e FQ_RO_TOKEN=dev-ro-5b7e03f9c8d1 \
+  -e FQ_REPLICATION_TOKEN=dev-replication-9d24f6a1c3 \
   ghcr.io/fq-db/fq:latest</code></div>
                         <p>Mount <strong>config.yml</strong> and <strong>fq_data</strong> when you want local persistence configuration and data files.</p>
                     </div>
@@ -843,7 +849,7 @@
                         <div class="code-block"><code>make build
 make run-server
 make run-cli</code></div>
-                        <p>Build outputs include <strong>fq</strong>, <strong>fq-cli</strong>, and <strong>fq-bench</strong>. Release archives provide prebuilt Linux and macOS binaries.</p>
+                        <p>Build outputs include <strong>fq</strong>, <strong>fq-cli</strong>, <strong>fq-bench</strong>, <strong>fq-stress</strong>, and <strong>fq-results</strong>. Release archives provide prebuilt Linux and macOS binaries.</p>
                     </div>
                 </div>
 
@@ -1018,6 +1024,7 @@ go run ./cmd/bench -address :1945 -connections 200 -rps 50000</code></div>
         <div class="container footer-content">
             <div>fq - fast quotas for backend systems</div>
             <div class="footer-links">
+                <a href="https://fq-db.github.io/fq/">Docs</a>
                 <a href="https://github.com/fq-db/fq" target="_blank" rel="noreferrer">GitHub</a>
                 <a href="https://github.com/fq-db/fq-client-go" target="_blank" rel="noreferrer">Go client</a>
                 <a href="#quickstart">Quick Start</a>
